@@ -1,0 +1,88 @@
+
+const uint8_t relay = 4;
+const uint8_t LDR_autoPin = 34;
+const uint8_t LDR_faultPin = 35;
+const uint8_t Vin = 25;
+
+uint8_t count=60;
+uint16_t LDR_AutoReading;
+uint16_t LDR_faultReading;
+uint16_t voltage;
+
+void SendMessage(String);
+void SendMessage1(String);
+
+void setup() {
+  Serial.begin(115200);
+  Serial2.begin(9600);
+  pinMode(relay,OUTPUT);
+  adcAttachPin(Vin);
+}
+
+void loop() {
+  LDR_AutoReading = analogRead(LDR_autoPin);
+  LDR_faultReading = analogRead(LDR_faultPin);
+  voltage = analogRead(Vin);
+
+  Serial.println("Ambient Light Intensity: "+String(LDR_AutoReading));
+  Serial.println("Bulb Light Intensity: "+String(LDR_faultReading));
+  Serial.println("Bulb Voltage: "+String(voltage));
+
+  if(LDR_AutoReading >2000)
+  {
+    digitalWrite(relay,HIGH);
+  }
+  else
+  {
+    digitalWrite(relay,LOW);
+  }
+  if(voltage>1500 && LDR_faultReading>3500 && LDR_AutoReading >2000)
+  {
+    SendMessage("Bulb Fault at PostNo:723/A DRDA Hall, District Collectrate, Shivagangai");
+    delay(15000);
+    SendMessage1("Bulb Fault at PostNo:723/A DRDA Hall, District Collectrate, Shivagangai");
+    delay(1000);
+  }
+  if(voltage<1500 && count>=60)
+  {
+    SendMessage("Low Volatge detected at PostNo:723/A DRDA Hall, District Collectrate, Shivagangai");
+    delay(15000);
+    SendMessage1("Low Volatge detected at PostNo:723/A DRDA Hall, District Collectrate, Shivagangai");
+    delay(1000);
+    count=0;
+  }
+  if(voltage<1500)
+  {
+    count++;
+  }
+  else
+    count=0;
+  delay(1000);
+}
+
+void SendMessage(String msg)
+{
+  Serial2.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial2.println("AT+CMGS=\"+916381117405\"\r"); // Replace x with mobile number
+  delay(1000);
+  Serial2.println(msg);// The SMS text you want to send
+  delay(100);
+  Serial2.println((char)26);// ASCII code of CTRL+Z
+  delay(1000);
+  Serial.println("DONE");
+}
+
+void SendMessage1(String msg)
+{
+  Serial2.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial2.println("AT+CMGS=\"+97826987567\"\r"); // Replace x with mobile number
+  delay(1000);
+  Serial2.println(msg);// The SMS text you want to send
+  delay(100);
+  Serial2.println((char)26);// ASCII code of CTRL+Z
+  delay(1000);
+  Serial.println("DONE");
+}
+
